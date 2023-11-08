@@ -1,7 +1,6 @@
 ﻿using TheGame;
 using UnityEngine;
 using UnityEngine.Pool;
-using XIV.Core.Extensions;
 using XIV.Core.TweenSystem;
 using XIV.Core.Utils;
 
@@ -12,60 +11,51 @@ namespace PlayerSystems
         [SerializeField] GameObject arrowPrefab;
         [SerializeField] LayerMask hitLayers;
         [SerializeField] LayerMask groundLayer;
-        [SerializeField] float maxDraw = 25f;
-        [SerializeField] float aimSpeed = 4f;
-        [SerializeField] float aimSpeedWhenPossibleHit = 2f;
+        [SerializeField] float maxDraw = 40f;
         [SerializeField] TrajectoryIndicator trajectoryIndicator;
-        float currentDraw;
         
         Vector3 acceleration => Physics.gravity;
         
         ObjectPool<ThrowObject> throwableObjectPool;
         Transform hand;
+        
+        [Range(0, 1)]
+        [SerializeField] float followInputSpeed = 1f;
+        [Range(0, 1)]
+        [SerializeField] float followInputOnPossibleHitSpeed = 0.5f;
 
-        float minDraw => maxDraw * 0.35f;
+        ScreenSpaceInputHandler inputHandler;
+        Vector3 inputFollowPosition;
 
         void Awake()
         {
+            inputFollowPosition = Vector3.one * 0.5f;
             throwableObjectPool = new ObjectPool<ThrowObject>(CreateThrowable, OnGetThrowable, OnReleaseThrowable);
         }
 
         public void Init(Transform hand) => this.hand = hand;
-
-        public void StartDraw() => ResetBow();
-
+        
         public void ContinueDrawing()
         {
-            var speed = IsCollidingAOT() ? aimSpeedWhenPossibleHit : aimSpeed;
-            currentDraw += Time.deltaTime * speed;
-            currentDraw = Clamp(currentDraw, maxDraw, minDraw);
-        }
-
-        static float Clamp(float current, float max, float min)
-        {
-            while (Mathf.PingPong(current, max) < min)
-            {
-                current += 0.1f;
-            }
-
-            return current;
+            inputHandler.Update();
+            var speed = IsCollidingAOT() ? followInputOnPossibleHitSpeed : followInputSpeed;
+            inputFollowPosition += inputHandler.GetDeltaNormalized() * (speed * Time.deltaTime);
+            inputFollowPosition.x = Mathf.Clamp01(inputFollowPosition.x);
+            inputFollowPosition.y = Mathf.Clamp01(inputFollowPosition.y);
         }
 
         public void Release()
         {
-            var velocity = GetVelocity(currentDraw, maxDraw);
+            var velocity = GetVelocity();
             int mask = hitLayers | groundLayer;
-            throwableObjectPool.Get().Init(velocity, Physics.gravity, mask, OnHit);
-            ResetBow();
+            throwableObjectPool.Get().Init(velocity, acceleration, mask, OnHit);
         }
 
         public void DisplayAimIndicator()
         {
             trajectoryIndicator.SetCollidingState(IsCollidingAOT());
-            trajectoryIndicator.Display(hand.position, GetVelocity(currentDraw, maxDraw), acceleration);
+            trajectoryIndicator.Display(hand.position, GetVelocity(), acceleration);
         }
-
-        void ResetBow() => currentDraw = minDraw;
 
         void OnHit(ThrowObject throwObject, Vector3 beforeHitPos, Vector3 targetPos)
         {
@@ -114,7 +104,7 @@ namespace PlayerSystems
             var detail = 2048;
             var duration = 10f;
             var handPos = hand.position;
-            var velocity = GetVelocity(currentDraw, maxDraw);
+            var velocity = GetVelocity();
             var list = ListPool<Vector3>.Get();
             TrajectoryUtils.GetCollisionsAtTime(handPos, velocity, acceleration, detail, duration, Time.time, list, TargetManager.targets);
             bool isColliding = list.Count > 0;
@@ -122,10 +112,12 @@ namespace PlayerSystems
             return isColliding;
         }
 
-        static Vector3 GetVelocity(float currentDraw, float maxDraw)
+        Vector3 GetVelocity()
         {
-            var drawAmount = Mathf.PingPong(currentDraw, maxDraw);
-            return GetDirection(drawAmount / maxDraw) * drawAmount;
+            var inputPos = inputFollowPosition;
+            var currDrawY = Mathf.Lerp(-maxDraw, maxDraw, inputPos.y);
+            var currDrawX = Mathf.Lerp(-maxDraw, maxDraw, inputPos.x);
+            return ((GetDirection(currDrawY / maxDraw) * currDrawY) + Vector3.right * currDrawX);
         }
 
         static Vector3 GetDirection(float t)

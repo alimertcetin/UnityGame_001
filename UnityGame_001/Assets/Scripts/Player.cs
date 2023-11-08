@@ -42,9 +42,9 @@ namespace PlayerSystems
 
         void HandleIdle()
         {
+            bow.DisplayAimIndicator();
             if (Input.GetMouseButtonDown(0))
             {
-                bow.StartDraw();
                 SetState(PlayerState.AimBow);
             }
         }
@@ -55,7 +55,6 @@ namespace PlayerSystems
             bow.DisplayAimIndicator();
             if (Input.GetMouseButtonDown(1))
             {
-                bow.StartDraw();
                 bow.DisplayAimIndicator();
                 SetState(PlayerState.Idle);
             }
