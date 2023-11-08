@@ -10,7 +10,7 @@ namespace PlayerSystems
         public void Update()
         {
             inputPreviousPosition = inputPosition;
-#if UNITY_ANDROID
+#if UNITY_ANDROID && (UNITY_EDITOR == false)
             if (Input.touchCount > 0) inputPosition = Input.GetTouch(0).position;
             else inputPosition = Vector3.one * 0.5f; // screen center
 #else
