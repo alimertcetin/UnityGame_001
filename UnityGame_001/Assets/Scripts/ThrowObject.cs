@@ -35,6 +35,12 @@ namespace PlayerSystems
                 return;
             }
 
+            if (currentPosition.y < -15f)
+            {
+                onHit.Invoke(this, currentPosition, nextPosition);
+                return;
+            }
+
             SetPosition(nextPosition);
         }
 
