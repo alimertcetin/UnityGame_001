@@ -191,9 +191,9 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 64
   maxDraw: 40
-  aimSpeed: 10
-  aimSpeedWhenPossibleHit: 1
   trajectoryIndicator: {fileID: 1975378240}
+  followInputSpeed: 0.308
+  followInputOnPossibleHitSpeed: 0.077
 --- !u!4 &153889520
 Transform:
   m_ObjectHideFlags: 0
@@ -676,7 +676,7 @@ MonoBehaviour:
   - {fileID: 677771820}
   prefab: {fileID: 7099351619900306141, guid: ad1be0eebfc28bf40934284831e04b30, type: 3}
   spawnInterval: 4
-  movementDuration: 15
+  movementDuration: 12.24
 --- !u!4 &1259022492
 Transform:
   m_ObjectHideFlags: 0
@@ -887,7 +887,7 @@ MonoBehaviour:
   - {fileID: 60786608}
   prefab: {fileID: 7099351619900306141, guid: ad1be0eebfc28bf40934284831e04b30, type: 3}
   spawnInterval: 4
-  movementDuration: 15
+  movementDuration: 7.97
 --- !u!4 &1967387250
 Transform:
   m_ObjectHideFlags: 0
