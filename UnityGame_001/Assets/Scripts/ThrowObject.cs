@@ -16,8 +16,9 @@ namespace PlayerSystems
         public void Init(Vector3 velocity, Vector3 acceleration, int layerMask, Action<ThrowObject, Vector3, Vector3> onHit)
         {
             startPos = transform.position;
-            this.acceleration = acceleration;
             this.velocity = velocity;
+            this.acceleration = acceleration;
+            this.timePassed = 0f;
             this.layerMask = layerMask;
             this.onHit = onHit;
         }
