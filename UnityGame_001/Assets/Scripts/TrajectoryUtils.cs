@@ -53,8 +53,10 @@ namespace PlayerSystems
                     if ((closestPoint - position).sqrMagnitude < 0.01f)
                     {
                         collisionPoints.Add(closestPoint);
+#if UNITY_EDITOR
                         XIVDebug.DrawCircle(closestPoint, 0.1f, Color.blue, 1f);
                         XIVDebug.DrawBounds(bounds, 1f);
+#endif
                     }
                 }
             }
