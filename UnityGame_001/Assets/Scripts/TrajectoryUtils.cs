@@ -5,11 +5,6 @@ using XIV.Core.Extensions;
 
 namespace PlayerSystems
 {
-    struct PositionData
-    {
-        public float time;
-        public Vector3 position;
-    }
     public static class TrajectoryUtils
     {
         public static void GetPointsNonAlloc(Vector3 startPos, Vector3 velocity, Vector3 accelearion, Vector3[] buffer, int detail, float duration)
@@ -24,9 +19,8 @@ namespace PlayerSystems
 
         public static void GetCollisionsAtTime(Vector3 startPos, Vector3 velocity, Vector3 acceleration, int detail, float duration, float absoluteTime, List<Vector3> collisionPoints, List<MovingPlatform> platforms)
         {
-            var buffer = Utils.GetBuffer<PositionData>(detail);
             var colliders = Utils.GetBuffer<Collider>(platforms.Count);
-            Utils.CacheType(platforms, colliders);
+            Utils.CacheTypeFromChild(platforms, colliders);
             var dt = Time.deltaTime; // for precision
             
             for (int i = 0; i < detail; i++)
@@ -61,7 +55,6 @@ namespace PlayerSystems
                 }
             }
             colliders.Return();
-            buffer.Return();
         }
         
         public static Vector3 GetPoint(Vector3 startPos, Vector3 velocity, Vector3 acceleration, float t)

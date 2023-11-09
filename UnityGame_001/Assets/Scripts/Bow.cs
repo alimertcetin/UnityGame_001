@@ -1,4 +1,5 @@
-﻿using TheGame;
+﻿using System;
+using TheGame;
 using UnityEngine;
 using UnityEngine.Pool;
 using XIV.Core.TweenSystem;
@@ -6,39 +7,46 @@ using XIV.Core.Utils;
 
 namespace PlayerSystems
 {
-    public class Bow : MonoBehaviour
+    public class Bow : BehaviourBase
     {
         [SerializeField] GameObject arrowPrefab;
         [SerializeField] LayerMask hitLayers;
         [SerializeField] LayerMask groundLayer;
         [SerializeField] float maxDraw = 40f;
         [SerializeField] TrajectoryIndicator trajectoryIndicator;
+        [SerializeField] GameSettingsChannelSO gameSettingsLoadedChannel;
         
         Vector3 acceleration => Physics.gravity;
         
         ObjectPool<ThrowObject> throwableObjectPool;
         Transform hand;
-        
-        [Range(0, 1)]
-        [SerializeField] float followInputSpeed = 1f;
-        [Range(0, 1)]
-        [SerializeField] float followInputOnPossibleHitSpeed = 0.5f;
+        GameSettings gameSettings;
 
         ScreenSpaceInputHandler inputHandler;
         Vector3 inputFollowPosition;
 
-        void Awake()
+        protected override void Awake()
         {
+            base.Awake();
             inputFollowPosition = Vector3.one * 0.5f;
             throwableObjectPool = new ObjectPool<ThrowObject>(CreateThrowable, OnGetThrowable, OnReleaseThrowable);
         }
+
+        protected override int[] GetStates()
+        {
+            return new[] { GameState.PLAYING };
+        }
+
+        void OnEnable() => gameSettingsLoadedChannel.Register(OnGameSettingsLoaded);
+        void OnDisable() => gameSettingsLoadedChannel.Unregister(OnGameSettingsLoaded);
+        void OnGameSettingsLoaded(GameSettings obj) => gameSettings = obj;
 
         public void Init(Transform hand) => this.hand = hand;
         
         public void ContinueDrawing()
         {
             inputHandler.Update();
-            var speed = IsCollidingAOT() ? followInputOnPossibleHitSpeed : followInputSpeed;
+            var speed = IsCollidingAOT() ? gameSettings.possibleHitSensitivity : gameSettings.normalSensitivity;
             inputFollowPosition += inputHandler.GetDeltaNormalized() * (speed * Time.deltaTime);
             inputFollowPosition.x = Mathf.Clamp01(inputFollowPosition.x);
             inputFollowPosition.y = Mathf.Clamp01(inputFollowPosition.y);
@@ -73,7 +81,7 @@ namespace PlayerSystems
                 throwObject.enabled = false;
                 if (closest.GetComponent<MovingPlatform>())
                 {
-                    closest.XIVTween()
+                    closest.GetComponentInChildren<Renderer>().XIVTween()
                         .RendererColor(Color.white, Color.black, 0.25f, EasingFunction.Spring, true)
                         .And()
                         .Scale(Vector3.one, Vector3.one * 0.75f, 0.25f, EasingFunction.EaseOutBounce, true)
@@ -86,7 +94,10 @@ namespace PlayerSystems
             }
         }
 
-        ThrowObject CreateThrowable() => Instantiate(arrowPrefab).AddComponent<ThrowObject>();
+        ThrowObject CreateThrowable()
+        {
+            return Instantiate(arrowPrefab).AddComponent<ThrowObject>();
+        }
 
         void OnGetThrowable(ThrowObject obj)
         {

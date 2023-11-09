@@ -1,4 +1,5 @@
 using System;
+using TheGame;
 using UnityEngine;
 
 namespace PlayerSystems
@@ -25,6 +26,8 @@ namespace PlayerSystems
 
         void Update()
         {
+            if (GameState.currentState == GameState.PAUSED) return;
+
             switch (currentState)
             {
                 case PlayerState.Idle:

@@ -1,10 +1,11 @@
 ﻿using System;
+using TheGame;
 using UnityEngine;
 using UnityEngine.Pool;
 
 namespace PlayerSystems
 {
-    public class ThrowObject : MonoBehaviour
+    public class ThrowObject : BehaviourBase
     {
         Vector3 startPos;
         Vector3 velocity;
@@ -23,7 +24,7 @@ namespace PlayerSystems
             this.onHit = onHit;
         }
 
-        void Update()
+        public override void Tick()
         {
             var currentPosition = transform.position;
             var nextPosition = TrajectoryUtils.GetPoint(startPos, velocity, acceleration, timePassed);
@@ -51,6 +52,11 @@ namespace PlayerSystems
             var currentPos = t.position;
             t.forward = nextPosition - currentPos;
             t.position = nextPosition;
+        }
+
+        protected override int[] GetStates()
+        {
+            return new[] { GameState.PLAYING };
         }
 
         void OnDrawGizmos()

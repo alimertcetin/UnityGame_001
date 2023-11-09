@@ -1,10 +1,9 @@
-﻿using System;
-using TheGame;
+﻿using TheGame;
 using UnityEngine;
 
 namespace PlayerSystems
 {
-    public class MovingPlatform : MonoBehaviour
+    public class MovingPlatform : BehaviourBase
     {
         Vector3 startPos;
         Vector3 endPos;
@@ -20,12 +19,13 @@ namespace PlayerSystems
             this.duration = duration;
         }
 
-        void Awake()
+        protected override void Awake()
         {
+            base.Awake();
             TargetManager.AddTargetToList(this);
         }
 
-        void Update()
+        public override void Tick()
         {
             var pos = Vector3.Lerp(startPos, endPos, normalizedTime);
             transform.position = pos;
@@ -34,6 +34,11 @@ namespace PlayerSystems
             {
                 OnReachedTargetPosition();
             }
+        }
+
+        protected override int[] GetStates()
+        {
+            return new[] { GameState.PLAYING };
         }
 
         public Vector3 GetPositionAtTime(float time)

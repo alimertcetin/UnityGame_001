@@ -114,5 +114,24 @@ namespace PlayerSystems
                 buffer[i] = from[i].GetComponent<T1>();
             }
         }
+
+        /// <summary>
+        /// Cache <typeparamref name="T0"/> to <typeparamref name="T1"/>
+        /// </summary>
+        /// <param name="from">Components to cache</param>
+        /// <param name="buffer">Buffer to hold cached values</param>
+        /// <exception cref="System.ArgumentOutOfRangeException">If there is no place to hold cached values in <paramref name="buffer"/></exception>
+        public static void CacheTypeFromChild<T0, T1>(IList<T0> from, T1[] buffer)
+            where T0 : Component
+            where T1 : Component
+        {
+            int arrLength = from.Count;
+            int bufferLength = buffer.Length;
+            if (bufferLength < arrLength) throw new System.ArgumentOutOfRangeException(nameof(buffer));
+            for (int i = 0; i < arrLength; i++)
+            {
+                buffer[i] = from[i].GetComponentInChildren<T1>();
+            }
+        }
     }
 }

@@ -1,8 +1,10 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace PlayerSystems
 {
-    public class TrajectoryIndicator : MonoBehaviour
+    [Serializable]
+    public class TrajectoryIndicator
     {
         [SerializeField] LineRenderer lineRenderer;
         [SerializeField] int detail = 70;
