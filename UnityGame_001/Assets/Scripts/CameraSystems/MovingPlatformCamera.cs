@@ -10,7 +10,7 @@ namespace TheGame.CameraSystems
         public static MovingPlatformCamera instance;
         [SerializeField] Vector3 offset;
         bool hasTarget;
-        MovingPlatform target;
+        Transform target;
         Camera cam;
 
         protected override void Awake()
@@ -34,18 +34,18 @@ namespace TheGame.CameraSystems
                 return;
             }
 
-            var pos = target.transform.position;
+            var pos = target.position;
             var targetPos = pos + offset;
             transform.position = Vector3.MoveTowards(transform.position, targetPos, 10f * Time.deltaTime);
             transform.LookAt(pos);
         }
 
-        public void Show(MovingPlatform movingPlatform)
+        public void Show(Transform movingPlatform)
         {
             hasTarget = true;
             target = movingPlatform;
             gameObject.SetActive(true);
-            transform.position = target.transform.position + offset;
+            transform.position = target.position + offset;
         }
 
         public void Hide()

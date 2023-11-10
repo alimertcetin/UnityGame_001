@@ -11,9 +11,9 @@ namespace PlayerSystems
         [Tooltip("Time in seconds")]
         [SerializeField] float duration = 10f;
 
-        public void SetCollidingState(bool isColliding)
+        public void SetCollidingState(float t)
         {
-            lineRenderer.materials[0].color = isColliding ? Color.green : Color.white;
+            lineRenderer.materials[0].color = Color.Lerp(Color.white, Color.green, t);
         }
 
         public void Display(Vector3 startPos, Vector3 velocity, Vector3 acceleration)

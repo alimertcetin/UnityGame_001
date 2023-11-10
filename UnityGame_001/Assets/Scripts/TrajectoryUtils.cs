@@ -1,10 +1,18 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using XIV.Core;
-using XIV.Core.Extensions;
 
 namespace PlayerSystems
 {
+    public struct TrajectoryCollisionData
+    {
+        public Vector3 point;
+        public Vector3 colliderCenterAtTime;
+        public Transform transform;
+        public Collider collider;
+        public float absoluteCollisionTime;
+    }
+    
     public static class TrajectoryUtils
     {
         public static void GetPointsNonAlloc(Vector3 startPos, Vector3 velocity, Vector3 accelearion, Vector3[] buffer, int detail, float duration)
@@ -17,22 +25,22 @@ namespace PlayerSystems
             }
         }
 
-        public static void GetCollisionsAtTime(Vector3 startPos, Vector3 velocity, Vector3 acceleration, int detail, float duration, float absoluteTime, List<Vector3> collisionPoints, List<MovingPlatform> platforms)
+        public static void GetCollisionsAtTime(Vector3 startPos, Vector3 velocity, Vector3 acceleration, int detail, float duration, float absoluteTime, List<TrajectoryCollisionData> collisionPoints, List<MovingPlatform> platforms)
         {
             var dt = Time.deltaTime; // for precision
             int platformsLength = platforms.Count;
-            
-            for (int i = 0; i < detail; i++)
+            for (var i = 0; i < platformsLength; i++)
             {
-                var time = (i / (detail - 1f)) * duration;
-                var position = GetPoint(startPos, velocity, acceleration, time);
+                var platform = platforms[i];
+                var platformCollider = platform.coll;
                 
-                for (var j = 0; j < platformsLength; j++)
+                for (int j = 0; j < detail; j++)
                 {
-                    var platform = platforms[j];
-                    var platformCollider = platform.coll;
+                    var time = (j / (detail - 1f)) * duration;
+                    var position = GetPoint(startPos, velocity, acceleration, time);
+                    var collisionTime = absoluteTime + time + dt;
                     
-                    var platformCenterAtTime = platform.GetPositionAtTime(absoluteTime + time + dt);
+                    var platformCenterAtTime = platform.GetPositionAtTime(collisionTime);
                     var bounds = platformCollider.bounds;
                     bounds.center = platformCenterAtTime;
                     var closestPoint = bounds.ClosestPoint(position);
@@ -44,13 +52,21 @@ namespace PlayerSystems
                     
                     if ((closestPoint - position).sqrMagnitude < 0.01f)
                     {
-                        collisionPoints.Add(closestPoint);
+                        collisionPoints.Add(new TrajectoryCollisionData
+                        {
+                            point = closestPoint,
+                            colliderCenterAtTime = platformCenterAtTime,
+                            transform = platform.transform,
+                            collider = platformCollider,
+                            absoluteCollisionTime = collisionTime,
+                        });
 #if UNITY_EDITOR
                         XIVDebug.DrawCircle(closestPoint, 0.1f, Color.blue, 1f);
                         XIVDebug.DrawBounds(bounds, 1f);
 #endif
                     }
                 }
+                
             }
         }
         

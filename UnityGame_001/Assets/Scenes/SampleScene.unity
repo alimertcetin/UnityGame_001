@@ -311,6 +311,7 @@ MonoBehaviour:
     duration: 10
   gameSettingsLoadedChannel: {fileID: 11400000, guid: 0854f6d49341a2e4f8bbb78563c5bba8, type: 2}
   dontAllowInvalidShots: 0
+  hitIndicatorPrecision: 0.1
 --- !u!4 &153889520
 Transform:
   m_ObjectHideFlags: 0
@@ -1265,7 +1266,6 @@ GameObject:
   m_Component:
   - component: {fileID: 730201892}
   - component: {fileID: 730201891}
-  - component: {fileID: 730201890}
   - component: {fileID: 730201889}
   m_Layer: 0
   m_Name: MovingPlatformCamera
@@ -1287,14 +1287,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   offset: {x: 0, y: 0.5, z: -1}
---- !u!81 &730201890
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 730201888}
-  m_Enabled: 1
 --- !u!20 &730201891
 Camera:
   m_ObjectHideFlags: 0
@@ -2226,7 +2218,7 @@ MonoBehaviour:
   - {fileID: 677771820}
   prefab: {fileID: 3364106478553940292, guid: ad1be0eebfc28bf40934284831e04b30, type: 3}
   spawnInterval: 4
-  movementDuration: 12.24
+  movementDuration: 20
 --- !u!4 &1259022492
 Transform:
   m_ObjectHideFlags: 0
@@ -2483,7 +2475,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameSettingsLoadedChannel: {fileID: 11400000, guid: 0854f6d49341a2e4f8bbb78563c5bba8, type: 2}
   gameSettings:
-    normalSensitivity: 0.2
+    normalSensitivity: 0.151
     possibleHitSensitivity: 0.04
 --- !u!4 &1386940270
 Transform:
@@ -3343,7 +3335,7 @@ MonoBehaviour:
   - {fileID: 60786608}
   prefab: {fileID: 3364106478553940292, guid: ad1be0eebfc28bf40934284831e04b30, type: 3}
   spawnInterval: 4
-  movementDuration: 7.97
+  movementDuration: 28
 --- !u!4 &1967387250
 Transform:
   m_ObjectHideFlags: 0

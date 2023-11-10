@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using TheGame;
 using TheGame.CameraSystems;
 using TheGame.ThrowSystems;
@@ -18,6 +19,8 @@ namespace PlayerSystems
         [SerializeField] TrajectoryIndicator trajectoryIndicator;
         [SerializeField] GameSettingsChannelSO gameSettingsLoadedChannel;
         [SerializeField] bool dontAllowInvalidShots;
+        [Range(0f, 1f)]
+        [SerializeField] float hitIndicatorPrecision = 0.1f;
         
         Vector3 acceleration => Physics.gravity;
         
@@ -65,16 +68,58 @@ namespace PlayerSystems
 
         public void Release()
         {
-            if (IsCollidingAOT() == false && dontAllowInvalidShots) return;
+            var list = ListPool<TrajectoryCollisionData>.Get();
+            bool isColliding = IsCollidingAOT(list);
+            
+            if (isColliding == false && dontAllowInvalidShots)
+            {
+                ListPool<TrajectoryCollisionData>.Release(list);
+                return;
+            }
+
             var velocity = GetVelocity();
             int mask = hitLayers | groundLayer;
-            ThrowSystem.Throw(throwableObjectPool.Get().gameObject, new ThrowData(hand.position, velocity, acceleration, mask), OnHit);
+            var go = throwableObjectPool.Get().gameObject;
+            var throwData = new ThrowData(hand.position, velocity, acceleration, mask);
+            ThrowSystem.Throw(go, throwData, OnHit);
+
+            if (isColliding)
+            {
+                var trajectoryCollisionData = list[^1];
+                if (Vector3.Distance(trajectoryCollisionData.colliderCenterAtTime, trajectoryCollisionData.point) < hitIndicatorPrecision)
+                {
+                    var instance = MovingPlatformCamera.instance;
+                    instance.CancelTween(false);
+                    instance.Show(trajectoryCollisionData.transform);
+
+                    var travelTime = trajectoryCollisionData.absoluteCollisionTime - Time.time;
+                    instance.XIVTween()
+                        .Wait(travelTime + 1f)
+                        .OnComplete(instance.Hide)
+                        .Start();
+                }
+            }
+            
+            
+            ListPool<TrajectoryCollisionData>.Release(list);
         }
 
         public void DisplayAimIndicator()
         {
-            trajectoryIndicator.SetCollidingState(IsCollidingAOT());
+            var list = ListPool<TrajectoryCollisionData>.Get();
+            bool isColliding = IsCollidingAOT(list);
+            if (isColliding == false)
+            {
+                trajectoryIndicator.SetCollidingState(0f);
+                trajectoryIndicator.Display(hand.position, GetVelocity(), acceleration);
+                ListPool<TrajectoryCollisionData>.Release(list);
+                return;
+            }
+            var trajectoryCollisionData = list[^1];
+            var distance = Vector3.Distance(trajectoryCollisionData.colliderCenterAtTime, trajectoryCollisionData.point);
+            trajectoryIndicator.SetCollidingState(1f - Mathf.Clamp01(distance / hitIndicatorPrecision));
             trajectoryIndicator.Display(hand.position, GetVelocity(), acceleration);
+            ListPool<TrajectoryCollisionData>.Release(list);
         }
 
         void OnHit(ThrowObjectHitData hitData)
@@ -96,14 +141,6 @@ namespace PlayerSystems
                 if (movingPlatform)
                 {
                     movingPlatform.TakeHit();
-                    var instance = MovingPlatformCamera.instance;
-                    instance.CancelTween(false);
-                    instance.Show(movingPlatform);
-                    
-                    instance.XIVTween()
-                        .Wait(1f)
-                        .OnComplete(instance.Hide)
-                        .Start();
                 }
             }
             else
@@ -131,14 +168,20 @@ namespace PlayerSystems
 
         bool IsCollidingAOT()
         {
+            var list = ListPool<TrajectoryCollisionData>.Get();
+            bool isColliding = IsCollidingAOT(list);
+            ListPool<TrajectoryCollisionData>.Release(list);
+            return isColliding;
+        }
+
+        bool IsCollidingAOT(List<TrajectoryCollisionData> list)
+        {
             var detail = 2048;
             var duration = 10f;
             var handPos = hand.position;
             var velocity = GetVelocity();
-            var list = ListPool<Vector3>.Get();
             TrajectoryUtils.GetCollisionsAtTime(handPos, velocity, acceleration, detail, duration, Time.time, list, TargetManager.targets);
             bool isColliding = list.Count > 0;
-            ListPool<Vector3>.Release(list);
             return isColliding;
         }
 
