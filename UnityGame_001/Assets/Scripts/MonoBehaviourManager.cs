@@ -39,6 +39,7 @@ namespace PlayerSystems
             }
 
             controller = new GameObject("--- BehaviourController ---").AddComponent<Controller>();
+            Object.DontDestroyOnLoad(controller);
         }
         
         public static void Add(BehaviourBase behaviour, params int[] states)
