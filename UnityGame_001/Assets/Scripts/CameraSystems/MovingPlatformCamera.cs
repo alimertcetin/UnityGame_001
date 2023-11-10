@@ -18,6 +18,7 @@ namespace TheGame.CameraSystems
             base.Awake();
             instance = this;
             cam = GetComponent<Camera>();
+            gameObject.SetActive(false);
         }
 
         protected override int[] GetStates()
