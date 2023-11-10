@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TheGame;
 using TheGame.CameraSystems;
 using TheGame.ThrowSystems;
+using TheGame.UI;
 using UnityEngine;
 using UnityEngine.Pool;
 using XIV.Core.TweenSystem;
@@ -128,18 +129,21 @@ namespace PlayerSystems
             Vector3 beforeHitPos = hitData.beforeHitPosition;
             Vector3 targetPos = hitData.afterHitPosition;
 
-            var p = throwObject.position;
+            var throwObjectPosition = throwObject.position;
             var buffer = Utils.GetBuffer<RaycastHit>(2);
             var diff = targetPos - beforeHitPos;
             int mask = hitLayers | groundLayer;
             var length = Physics.RaycastNonAlloc(beforeHitPos, diff.normalized, buffer, diff.magnitude, mask);
-            var closest = buffer.GetClosest(p, length);
+            var closest = buffer.GetClosest(throwObjectPosition, length);
             if (closest.transform)
             {
                 throwObject.SetParent(closest.transform, true);
                 var movingPlatform = closest.transform.GetComponentInParent<MovingPlatform>();
                 if (movingPlatform)
                 {
+                    var distance = Vector3.Distance(closest.collider.bounds.center, throwObjectPosition);
+                    var score = 1f - Mathf.Clamp01(distance / hitIndicatorPrecision);
+                    if (score > 0.1f) HitPointDisplayer.instance.Display(hitData.throwObject.position, score);
                     movingPlatform.TakeHit();
                 }
             }
