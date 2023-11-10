@@ -1,5 +1,6 @@
 ﻿using System;
 using TheGame;
+using TheGame.CameraSystems;
 using TheGame.ThrowSystems;
 using UnityEngine;
 using UnityEngine.Pool;
@@ -88,20 +89,28 @@ namespace PlayerSystems
             int mask = hitLayers | groundLayer;
             var length = Physics.RaycastNonAlloc(beforeHitPos, diff.normalized, buffer, diff.magnitude, mask);
             var closest = buffer.GetClosest(p, length);
-            buffer.Return();
-            if (closest)
+            if (closest.transform)
             {
                 throwObject.SetParent(closest.transform, true);
-                var movingPlatform = closest.GetComponentInParent<MovingPlatform>();
+                var movingPlatform = closest.transform.GetComponentInParent<MovingPlatform>();
                 if (movingPlatform)
                 {
                     movingPlatform.TakeHit();
+                    var instance = MovingPlatformCamera.instance;
+                    instance.CancelTween(false);
+                    instance.Show(movingPlatform);
+                    
+                    instance.XIVTween()
+                        .Wait(1f)
+                        .OnComplete(instance.Hide)
+                        .Start();
                 }
             }
             else
             {
                 throwableObjectPool.Release(throwObject);
             }
+            buffer.Return();
         }
 
         Transform CreateThrowable()

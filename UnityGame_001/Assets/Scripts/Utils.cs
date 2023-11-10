@@ -39,23 +39,22 @@ namespace PlayerSystems
             return closest;
         }
 
-        public static Collider GetClosest(this RaycastHit[] arr, Vector3 position)
+        public static RaycastHit GetClosest(this RaycastHit[] arr, Vector3 position)
         {
             return GetClosest(arr, position, arr.Length);
         }
 
-        public static Collider GetClosest(this RaycastHit[] arr, Vector3 position, int length)
+        public static RaycastHit GetClosest(this RaycastHit[] arr, Vector3 position, int length)
         {
-            Collider closest = default;
+            RaycastHit closest = default;
             var dist = float.MaxValue;
             for (var i = 0; i < length; i++)
             {
                 var hit = arr[i];
-                var obj = hit.collider;
                 var d = (hit.point - position).sqrMagnitude;
                 if (d < dist)
                 {
-                    closest = obj;
+                    closest = hit;
                     dist = d;
                 }
             }
