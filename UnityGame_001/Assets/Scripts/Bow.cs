@@ -1,5 +1,6 @@
 ﻿using System;
 using TheGame;
+using TheGame.ThrowSystems;
 using UnityEngine;
 using UnityEngine.Pool;
 using XIV.Core.TweenSystem;
@@ -15,10 +16,11 @@ namespace PlayerSystems
         [SerializeField] float maxDraw = 40f;
         [SerializeField] TrajectoryIndicator trajectoryIndicator;
         [SerializeField] GameSettingsChannelSO gameSettingsLoadedChannel;
+        [SerializeField] bool dontAllowInvalidShots;
         
         Vector3 acceleration => Physics.gravity;
         
-        ObjectPool<ThrowObject> throwableObjectPool;
+        ObjectPool<Transform> throwableObjectPool;
         Transform hand;
         GameSettings gameSettings;
 
@@ -28,8 +30,8 @@ namespace PlayerSystems
         protected override void Awake()
         {
             base.Awake();
-            inputFollowPosition = Vector3.one * 0.5f;
-            throwableObjectPool = new ObjectPool<ThrowObject>(CreateThrowable, OnGetThrowable, OnReleaseThrowable);
+            inputFollowPosition = Vector3.up * 0.75f + Vector3.right * 0.5f;
+            throwableObjectPool = new ObjectPool<Transform>(CreateThrowable, OnGetThrowable, OnReleaseThrowable);
         }
 
         protected override int[] GetStates()
@@ -52,11 +54,20 @@ namespace PlayerSystems
             inputFollowPosition.y = Mathf.Clamp01(inputFollowPosition.y);
         }
 
+        void Update()
+        {
+            if (dontAllowInvalidShots)
+            {
+                Release();
+            }
+        }
+
         public void Release()
         {
+            if (IsCollidingAOT() == false && dontAllowInvalidShots) return;
             var velocity = GetVelocity();
             int mask = hitLayers | groundLayer;
-            throwableObjectPool.Get().Init(velocity, acceleration, mask, OnHit);
+            ThrowSystem.Throw(throwableObjectPool.Get().gameObject, new ThrowData(hand.position, velocity, acceleration, mask), OnHit);
         }
 
         public void DisplayAimIndicator()
@@ -65,9 +76,13 @@ namespace PlayerSystems
             trajectoryIndicator.Display(hand.position, GetVelocity(), acceleration);
         }
 
-        void OnHit(ThrowObject throwObject, Vector3 beforeHitPos, Vector3 targetPos)
+        void OnHit(ThrowObjectHitData hitData)
         {
-            var p = throwObject.transform.position;
+            Transform throwObject = hitData.throwObject;
+            Vector3 beforeHitPos = hitData.beforeHitPosition;
+            Vector3 targetPos = hitData.afterHitPosition;
+
+            var p = throwObject.position;
             var buffer = Utils.GetBuffer<RaycastHit>(2);
             var diff = targetPos - beforeHitPos;
             int mask = hitLayers | groundLayer;
@@ -76,16 +91,11 @@ namespace PlayerSystems
             buffer.Return();
             if (closest)
             {
-                var throwableTransform = throwObject.transform;
-                throwableTransform.SetParent(closest.transform, true);
-                throwObject.enabled = false;
-                if (closest.GetComponent<MovingPlatform>())
+                throwObject.SetParent(closest.transform, true);
+                var movingPlatform = closest.GetComponentInParent<MovingPlatform>();
+                if (movingPlatform)
                 {
-                    closest.GetComponentInChildren<Renderer>().XIVTween()
-                        .RendererColor(Color.white, Color.black, 0.25f, EasingFunction.Spring, true)
-                        .And()
-                        .Scale(Vector3.one, Vector3.one * 0.75f, 0.25f, EasingFunction.EaseOutBounce, true)
-                        .Start();
+                    movingPlatform.TakeHit();
                 }
             }
             else
@@ -94,18 +104,18 @@ namespace PlayerSystems
             }
         }
 
-        ThrowObject CreateThrowable()
+        Transform CreateThrowable()
         {
-            return Instantiate(arrowPrefab).AddComponent<ThrowObject>();
+            return Instantiate(arrowPrefab).transform;
         }
 
-        void OnGetThrowable(ThrowObject obj)
+        void OnGetThrowable(Transform obj)
         {
             obj.transform.position = hand.position;
             obj.gameObject.SetActive(true);
         }
 
-        void OnReleaseThrowable(ThrowObject obj)
+        void OnReleaseThrowable(Transform obj)
         {
             obj.gameObject.SetActive(false);
         }
@@ -125,18 +135,18 @@ namespace PlayerSystems
 
         Vector3 GetVelocity()
         {
+            static Vector3 GetDirection(float t)
+            {
+                var t0 = t > 0.5f ? 1f - (t - 0.5f) / 0.5f : t / 0.5f;
+                var v0 = Vector3.Lerp(Vector3.zero, Vector3.forward, t0);
+                var v1 = Vector3.Lerp(Vector3.down, Vector3.up, t);
+                return (v0 + v1).normalized;
+            }
+            
             var inputPos = inputFollowPosition;
             var currDrawY = Mathf.Lerp(-maxDraw, maxDraw, inputPos.y);
             var currDrawX = Mathf.Lerp(-maxDraw, maxDraw, inputPos.x);
             return ((GetDirection(currDrawY / maxDraw) * currDrawY) + Vector3.right * currDrawX);
-        }
-
-        static Vector3 GetDirection(float t)
-        {
-            var t0 = t > 0.5f ? 1f - (t - 0.5f) / 0.5f : t / 0.5f;
-            var v0 = Vector3.Lerp(Vector3.zero, Vector3.forward, t0);
-            var v1 = Vector3.Lerp(Vector3.down, Vector3.up, t);
-            return (v0 + v1).normalized;
         }
     }
 }

@@ -310,6 +310,7 @@ MonoBehaviour:
     detail: 70
     duration: 10
   gameSettingsLoadedChannel: {fileID: 11400000, guid: 0854f6d49341a2e4f8bbb78563c5bba8, type: 2}
+  dontAllowInvalidShots: 0
 --- !u!4 &153889520
 Transform:
   m_ObjectHideFlags: 0
@@ -2124,7 +2125,7 @@ MonoBehaviour:
   spawnPositions:
   - {fileID: 1601819689}
   - {fileID: 677771820}
-  prefab: {fileID: 7099351619900306141, guid: ad1be0eebfc28bf40934284831e04b30, type: 3}
+  prefab: {fileID: 3364106478553940292, guid: ad1be0eebfc28bf40934284831e04b30, type: 3}
   spawnInterval: 4
   movementDuration: 12.24
 --- !u!4 &1259022492
@@ -2310,8 +2311,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameSettingsLoadedChannel: {fileID: 11400000, guid: 0854f6d49341a2e4f8bbb78563c5bba8, type: 2}
   gameSettings:
-    normalSensitivity: 0.416
-    possibleHitSensitivity: 0.039
+    normalSensitivity: 0.2
+    possibleHitSensitivity: 0.04
 --- !u!4 &1386940270
 Transform:
   m_ObjectHideFlags: 0
@@ -3168,7 +3169,7 @@ MonoBehaviour:
   spawnPositions:
   - {fileID: 1878453080}
   - {fileID: 60786608}
-  prefab: {fileID: 7099351619900306141, guid: ad1be0eebfc28bf40934284831e04b30, type: 3}
+  prefab: {fileID: 3364106478553940292, guid: ad1be0eebfc28bf40934284831e04b30, type: 3}
   spawnInterval: 4
   movementDuration: 7.97
 --- !u!4 &1967387250

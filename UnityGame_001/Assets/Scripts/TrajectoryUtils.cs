@@ -19,20 +19,18 @@ namespace PlayerSystems
 
         public static void GetCollisionsAtTime(Vector3 startPos, Vector3 velocity, Vector3 acceleration, int detail, float duration, float absoluteTime, List<Vector3> collisionPoints, List<MovingPlatform> platforms)
         {
-            var colliders = Utils.GetBuffer<Collider>(platforms.Count);
-            Utils.CacheTypeFromChild(platforms, colliders);
             var dt = Time.deltaTime; // for precision
+            int platformsLength = platforms.Count;
             
             for (int i = 0; i < detail; i++)
             {
                 var time = (i / (detail - 1f)) * duration;
                 var position = GetPoint(startPos, velocity, acceleration, time);
                 
-                int platformsLength = platforms.Count;
                 for (var j = 0; j < platformsLength; j++)
                 {
                     var platform = platforms[j];
-                    var platformCollider = colliders[j];
+                    var platformCollider = platform.coll;
                     
                     var platformCenterAtTime = platform.GetPositionAtTime(absoluteTime + time + dt);
                     var bounds = platformCollider.bounds;
@@ -54,7 +52,6 @@ namespace PlayerSystems
                     }
                 }
             }
-            colliders.Return();
         }
         
         public static Vector3 GetPoint(Vector3 startPos, Vector3 velocity, Vector3 acceleration, float t)

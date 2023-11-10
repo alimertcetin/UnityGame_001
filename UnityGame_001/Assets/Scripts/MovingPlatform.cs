@@ -1,10 +1,15 @@
-﻿using TheGame;
+﻿using System;
+using TheGame;
 using UnityEngine;
+using XIV.Core.TweenSystem;
+using XIV.Core.Utils;
 
 namespace PlayerSystems
 {
     public class MovingPlatform : BehaviourBase
     {
+        public Collider coll;
+        
         Vector3 startPos;
         Vector3 endPos;
         float normalizedTime => timePassed / duration;
@@ -17,6 +22,14 @@ namespace PlayerSystems
             startPos = start;
             endPos = end;
             this.duration = duration;
+        }
+
+        public void TakeHit()
+        {
+            transform.CancelTween();
+            transform.XIVTween()
+                .Scale(Vector3.one, Vector3.one * 0.75f, 0.25f, EasingFunction.EaseOutBounce, true)
+                .Start();
         }
 
         protected override void Awake()
@@ -53,6 +66,12 @@ namespace PlayerSystems
         {
             TargetManager.RemoveTarget(this);
             Destroy(this.gameObject);
+        }
+
+        void OnValidate()
+        {
+            if (coll) return;
+            coll = GetComponentInChildren<Collider>();
         }
 
         void OnDrawGizmos()
