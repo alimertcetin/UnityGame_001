@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace PlayerSystems
@@ -7,26 +8,106 @@ namespace PlayerSystems
     public class TrajectoryIndicator
     {
         [SerializeField] LineRenderer lineRenderer;
+        [SerializeField] GameObject hitIndicator;
         [SerializeField] int detail = 70;
         [Tooltip("Time in seconds")]
         [SerializeField] float duration = 10f;
 
-        public void SetCollidingState(float t)
+        Ghost rentedGhost;
+
+        bool active;
+
+        public void Show() => SetState(true);
+        public void Hide() => SetState(false);
+
+        /// <summary>
+        /// Displays the trajectory
+        /// </summary>
+        /// <param name="points">Points to display</param>
+        /// <param name="pointsLength">Length of the <paramref name="points"/></param>
+        /// <param name="hitPossibility">How likely is it to hit</param>
+        /// <param name="collisionData"></param>
+        public void Display(IList<Vector3> points, int pointsLength, float hitPossibility, TrajectoryCollisionData collisionData)
         {
-            lineRenderer.materials[0].color = Color.Lerp(Color.white, Color.green, t);
+            SetState(true);
+            SetLineRenderer(hitPossibility);
+            SetHitIndicator(collisionData, hitPossibility);
+            DisplayGhost(collisionData);
+            SetPositions(points, pointsLength);
         }
 
-        public void Display(Vector3 startPos, Vector3 velocity, Vector3 acceleration)
+        void SetState(bool v)
         {
-            if (lineRenderer.positionCount != detail) lineRenderer.positionCount = detail;
+            if (active == v) return;
+            active = v;
+            lineRenderer.enabled = active;
+            hitIndicator.SetActive(active);
+        }
 
-            var buffer = Utils.GetBuffer<Vector3>(detail);
-            TrajectoryUtils.GetPointsNonAlloc(startPos, velocity, acceleration, buffer, detail, duration);
-            for (int i = 0; i < detail; i++)
+        void SetLineRenderer(float t)
+        {
+            lineRenderer.materials[0].color = lineRenderer.colorGradient.Evaluate(t);
+        }
+
+        void SetHitIndicator(TrajectoryCollisionData collisionData, float t)
+        {
+            if (collisionData.transform == false)
             {
-                lineRenderer.SetPosition(i, buffer[i]);
+                hitIndicator.gameObject.SetActive(false);
+                return;
             }
-            buffer.Return();
+
+            hitIndicator.SetActive(t > 0.1f);
+            hitIndicator.transform.position = collisionData.point;
+            hitIndicator.transform.forward = -collisionData.normal;
+        }
+
+        void SetPositions(IList<Vector3> points, int count)
+        {
+            if (lineRenderer.positionCount != count) lineRenderer.positionCount = count;
+
+            for (int i = 0; i < count; i++)
+            {
+                lineRenderer.SetPosition(i, points[i]);
+            }
+        }
+
+        void DisplayGhost(TrajectoryCollisionData collisionData)
+        {
+            if (collisionData.transform == false || collisionData.transform.TryGetComponent<GhostOwner>(out var ghostOwner) == false)
+            {
+                HandleRent(default);
+                return;
+            }
+
+            HandleRent(ghostOwner);
+            rentedGhost.gameObject.SetActive(true);
+            rentedGhost.transform.position = collisionData.colliderCenterAtTime;
+        }
+
+        void HandleRent(GhostOwner ghostOwner)
+        {
+            if (ghostOwner == false)
+            {
+                if (rentedGhost) rentedGhost.ReturnToOwner();
+                
+                rentedGhost = default;
+                return;
+            }
+            
+            if (rentedGhost == false)
+            {
+                rentedGhost = ghostOwner.Rent();
+                return;
+            }
+
+            if (ghostOwner.IsOwnerOf(rentedGhost))
+            {
+                return;
+            }
+
+            rentedGhost.ReturnToOwner();
+            rentedGhost = ghostOwner.Rent();
         }
     }
 }

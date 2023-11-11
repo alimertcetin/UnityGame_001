@@ -6,10 +6,29 @@ namespace PlayerSystems
 {
     public struct TrajectoryCollisionData
     {
+        /// <summary>
+        /// The position of collision
+        /// </summary>
         public Vector3 point;
+        /// <summary>
+        /// Collider center at collision time
+        /// </summary>
         public Vector3 colliderCenterAtTime;
+        /// <summary>
+        /// The normal direction of collision point
+        /// </summary>
+        public Vector3 normal;
+        /// <summary>
+        /// Collided transform
+        /// </summary>
         public Transform transform;
+        /// <summary>
+        /// Collided collider
+        /// </summary>
         public Collider collider;
+        /// <summary>
+        /// The time when collision occurs
+        /// </summary>
         public float absoluteCollisionTime;
     }
     
@@ -56,6 +75,7 @@ namespace PlayerSystems
                         {
                             point = closestPoint,
                             colliderCenterAtTime = platformCenterAtTime,
+                            normal = dirToPositionAtTime,
                             transform = platform.transform,
                             collider = platformCollider,
                             absoluteCollisionTime = collisionTime,

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using TheGame;
 using TheGame.CameraSystems;
 using TheGame.ThrowSystems;
@@ -7,7 +6,6 @@ using TheGame.UI;
 using UnityEngine;
 using UnityEngine.Pool;
 using XIV.Core.TweenSystem;
-using XIV.Core.Utils;
 
 namespace PlayerSystems
 {
@@ -17,6 +15,7 @@ namespace PlayerSystems
         [SerializeField] LayerMask hitLayers;
         [SerializeField] LayerMask groundLayer;
         [SerializeField] float maxDraw = 40f;
+        [SerializeField] FloatingJoystick inputHandler;
         [SerializeField] TrajectoryIndicator trajectoryIndicator;
         [SerializeField] GameSettingsChannelSO gameSettingsLoadedChannel;
         [SerializeField] bool dontAllowInvalidShots;
@@ -29,13 +28,14 @@ namespace PlayerSystems
         Transform hand;
         GameSettings gameSettings;
 
-        ScreenSpaceInputHandler inputHandler;
-        Vector3 inputFollowPosition;
+        Vector2 inputFollowPosition;
+        const int detail = 2048;
+        const float duration = 10f;
 
         protected override void Awake()
         {
             base.Awake();
-            inputFollowPosition = Vector3.up * 0.75f + Vector3.right * 0.5f;
+            inputFollowPosition = Vector2.up * 0.75f + Vector2.right * 0.5f;
             throwableObjectPool = new ObjectPool<Transform>(CreateThrowable, OnGetThrowable, OnReleaseThrowable);
         }
 
@@ -52,9 +52,8 @@ namespace PlayerSystems
         
         public void ContinueDrawing()
         {
-            inputHandler.Update();
             var speed = IsCollidingAOT() ? gameSettings.possibleHitSensitivity : gameSettings.normalSensitivity;
-            inputFollowPosition += inputHandler.GetDeltaNormalized() * (speed * Time.deltaTime);
+            inputFollowPosition += (inputHandler.Direction * (speed * Time.deltaTime));
             inputFollowPosition.x = Mathf.Clamp01(inputFollowPosition.x);
             inputFollowPosition.y = Mathf.Clamp01(inputFollowPosition.y);
         }
@@ -109,18 +108,25 @@ namespace PlayerSystems
         {
             var list = ListPool<TrajectoryCollisionData>.Get();
             bool isColliding = IsCollidingAOT(list);
-            if (isColliding == false)
+            float hitPossibility = 0f;
+            TrajectoryCollisionData trajectoryCollisionData = default;
+            if (isColliding)
             {
-                trajectoryIndicator.SetCollidingState(0f);
-                trajectoryIndicator.Display(hand.position, GetVelocity(), acceleration);
-                ListPool<TrajectoryCollisionData>.Release(list);
-                return;
+                trajectoryCollisionData = list[^1];
+                var distance = Vector3.Distance(trajectoryCollisionData.colliderCenterAtTime, trajectoryCollisionData.point);
+                hitPossibility = 1f - Mathf.Clamp01(distance / hitIndicatorPrecision);
             }
-            var trajectoryCollisionData = list[^1];
-            var distance = Vector3.Distance(trajectoryCollisionData.colliderCenterAtTime, trajectoryCollisionData.point);
-            trajectoryIndicator.SetCollidingState(1f - Mathf.Clamp01(distance / hitIndicatorPrecision));
-            trajectoryIndicator.Display(hand.position, GetVelocity(), acceleration);
+
+            DisplayIndicator(hitPossibility, trajectoryCollisionData);
             ListPool<TrajectoryCollisionData>.Release(list);
+        }
+        
+        void DisplayIndicator(float hitPossibility, TrajectoryCollisionData collisionData)
+        {
+            var buffer = Utils.GetBuffer<Vector3>(detail);
+            TrajectoryUtils.GetPointsNonAlloc(hand.position, GetVelocity(), acceleration, buffer, detail, duration);
+            trajectoryIndicator.Display(buffer, detail, hitPossibility, collisionData);
+            buffer.Return();
         }
 
         void OnHit(ThrowObjectHitData hitData)
@@ -178,14 +184,12 @@ namespace PlayerSystems
             return isColliding;
         }
 
-        bool IsCollidingAOT(List<TrajectoryCollisionData> list)
+        bool IsCollidingAOT(List<TrajectoryCollisionData> collisionDataBuffer)
         {
-            var detail = 2048;
-            var duration = 10f;
             var handPos = hand.position;
             var velocity = GetVelocity();
-            TrajectoryUtils.GetCollisionsAtTime(handPos, velocity, acceleration, detail, duration, Time.time, list, TargetManager.targets);
-            bool isColliding = list.Count > 0;
+            TrajectoryUtils.GetCollisionsAtTime(handPos, velocity, acceleration, detail, duration, Time.time, collisionDataBuffer, TargetManager.targets);
+            bool isColliding = collisionDataBuffer.Count > 0;
             return isColliding;
         }
 
