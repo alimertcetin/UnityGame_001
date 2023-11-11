@@ -19,6 +19,7 @@ namespace TheGame.CameraSystems
             instance = this;
             cam = GetComponent<Camera>();
             gameObject.SetActive(false);
+            ClearRT(cam.targetTexture);
         }
 
         protected override int[] GetStates()
