@@ -12,14 +12,15 @@ namespace TheGame.CameraSystems
         bool hasTarget;
         Transform target;
         Camera cam;
+        float camDefaultDepth;
 
         protected override void Awake()
         {
             base.Awake();
             instance = this;
             cam = GetComponent<Camera>();
+            camDefaultDepth = cam.depth;
             gameObject.SetActive(false);
-            ClearRT(cam.targetTexture);
         }
 
         protected override int[] GetStates()
@@ -48,20 +49,13 @@ namespace TheGame.CameraSystems
             target = movingPlatform;
             gameObject.SetActive(true);
             transform.position = target.position + offset;
+            cam.depth = 10f;
         }
 
         public void Hide()
         {
             gameObject.SetActive(false);
-            ClearRT(cam.targetTexture);
-        }
-
-        static void ClearRT(RenderTexture renderTexture)
-        {
-            RenderTexture rt = RenderTexture.active;
-            RenderTexture.active = renderTexture;
-            GL.Clear(true, true, Color.clear);
-            RenderTexture.active = rt;
+            cam.depth = camDefaultDepth;
         }
     }
 }

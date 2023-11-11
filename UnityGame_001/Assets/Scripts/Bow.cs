@@ -90,11 +90,11 @@ namespace PlayerSystems
                 {
                     var instance = MovingPlatformCamera.instance;
                     instance.CancelTween(false);
-                    instance.Show(trajectoryCollisionData.transform);
+                    instance.Show(go.transform);
 
                     var travelTime = trajectoryCollisionData.absoluteCollisionTime - Time.time;
                     instance.XIVTween()
-                        .Wait(travelTime + 1f)
+                        .Wait(travelTime + 2f)
                         .OnComplete(instance.Hide)
                         .Start();
                 }
