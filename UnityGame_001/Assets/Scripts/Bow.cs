@@ -125,7 +125,7 @@ namespace PlayerSystems
         {
             var buffer = Utils.GetBuffer<Vector3>(detail);
             TrajectoryUtils.GetPointsNonAlloc(hand.position, GetVelocity(), acceleration, buffer, detail, duration);
-            trajectoryIndicator.Display(buffer, detail, hitPossibility, collisionData);
+            trajectoryIndicator.Display(buffer, detail, hitPossibility, collisionData, groundLayer | hitLayers);
             buffer.Return();
         }
 

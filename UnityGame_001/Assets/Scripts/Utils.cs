@@ -132,5 +132,19 @@ namespace PlayerSystems
                 buffer[i] = from[i].GetComponentInChildren<T1>();
             }
         }
+
+        public static int GetHits(RaycastHit[] buffer, int bufferLength, IList<Vector3> points, int pointsLength, int layerMask)
+        {
+            int count = 0;
+            for (int i = 0; i < pointsLength - 1 && i < bufferLength; i++)
+            {
+                if (Physics.Linecast(points[i], points[i + 1], out var hitInfo, layerMask))
+                {
+                    buffer[count++] = hitInfo;
+                }
+            }
+
+            return count;
+        }
     }
 }

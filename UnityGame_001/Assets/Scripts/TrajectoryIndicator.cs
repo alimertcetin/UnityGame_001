@@ -27,11 +27,11 @@ namespace PlayerSystems
         /// <param name="pointsLength">Length of the <paramref name="points"/></param>
         /// <param name="hitPossibility">How likely is it to hit</param>
         /// <param name="collisionData"></param>
-        public void Display(IList<Vector3> points, int pointsLength, float hitPossibility, TrajectoryCollisionData collisionData)
+        public void Display(IList<Vector3> points, int pointsLength, float hitPossibility, TrajectoryCollisionData collisionData, int layerMask)
         {
             SetState(true);
             SetLineRenderer(hitPossibility);
-            SetHitIndicator(collisionData, hitPossibility);
+            SetHitIndicator(points, pointsLength, layerMask, collisionData, hitPossibility);
             DisplayGhost(collisionData);
             SetPositions(points, pointsLength);
         }
@@ -49,12 +49,25 @@ namespace PlayerSystems
             lineRenderer.materials[0].color = lineRenderer.colorGradient.Evaluate(t);
         }
 
-        void SetHitIndicator(TrajectoryCollisionData collisionData, float t)
+        void SetHitIndicator(IList<Vector3> points, int pointsLength, int layerMask, TrajectoryCollisionData collisionData, float t)
         {
             if (collisionData.transform == false)
             {
-                hitIndicator.gameObject.SetActive(false);
-                return;
+                var buffer = Utils.GetBuffer<RaycastHit>(pointsLength);
+                int hitCount = Utils.GetHits(buffer, pointsLength, points, pointsLength, layerMask);
+                var closest = buffer.GetClosest(points[0], hitCount);
+                if (closest.transform == false)
+                {
+                    hitIndicator.gameObject.SetActive(false);
+                    return;
+                }
+
+                t = 0.11f;
+                collisionData = new TrajectoryCollisionData()
+                {
+                    point = closest.point,
+                    normal = closest.normal,
+                };
             }
 
             hitIndicator.SetActive(t > 0.1f);
