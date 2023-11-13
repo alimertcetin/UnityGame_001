@@ -51,7 +51,11 @@ namespace PlayerSystems
 
         protected override int[] GetStates()
         {
-            return new[] { GameState.PLAYING };
+            return new[]
+            {
+                GameState.PLAYING,
+                GameState.ARROW_RELEASED,
+            };
         }
 
         public Vector3 GetPositionAtTime(float time)

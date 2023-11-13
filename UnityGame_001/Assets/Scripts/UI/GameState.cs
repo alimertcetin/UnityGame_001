@@ -16,11 +16,13 @@ namespace TheGame
 
         public const int PAUSED = 0;
         public const int PLAYING = 1;
+        public const int ARROW_RELEASED = 2;
 
         public static int[] ALL =
         {
             PAUSED,
             PLAYING,
+            ARROW_RELEASED,
         };
 
         public static void ChangeState(int newState)

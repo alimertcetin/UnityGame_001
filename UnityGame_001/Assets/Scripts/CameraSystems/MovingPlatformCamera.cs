@@ -25,7 +25,11 @@ namespace TheGame.CameraSystems
 
         protected override int[] GetStates()
         {
-            return new[] { GameState.PLAYING };
+            return new[]
+            {
+                GameState.PLAYING,
+                GameState.ARROW_RELEASED,
+            };
         }
 
         public override void Tick()

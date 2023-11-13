@@ -88,6 +88,7 @@ namespace PlayerSystems
                 var trajectoryCollisionData = list[^1];
                 if (Vector3.Distance(trajectoryCollisionData.colliderCenterAtTime, trajectoryCollisionData.point) < hitIndicatorPrecision)
                 {
+                    GameState.ChangeState(GameState.ARROW_RELEASED);
                     var instance = MovingPlatformCamera.instance;
                     instance.CancelTween(false);
                     instance.Show(go.transform);
@@ -95,7 +96,11 @@ namespace PlayerSystems
                     var travelTime = trajectoryCollisionData.absoluteCollisionTime - Time.time;
                     instance.XIVTween()
                         .Wait(travelTime + 2f)
-                        .OnComplete(instance.Hide)
+                        .OnComplete(() =>
+                        {
+                            instance.Hide();
+                            GameState.ChangeState(GameState.previousState);
+                        })
                         .Start();
                 }
             }

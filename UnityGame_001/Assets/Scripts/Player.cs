@@ -11,23 +11,30 @@ namespace PlayerSystems
         Release
     }
 
-    public class Player : MonoBehaviour
+    public class Player : BehaviourBase
     {
         [SerializeField] Transform hand;
         [SerializeField] Bow bow;
         
         PlayerState currentState;
         
-        void Awake()
+        protected override void Awake()
         {
+            base.Awake();
             currentState = PlayerState.Idle;
             bow.Init(hand);
         }
 
-        void Update()
+        protected override int[] GetStates()
         {
-            if (GameState.currentState == GameState.PAUSED) return;
+            return new[]
+            {
+                GameState.PLAYING,
+            };
+        }
 
+        public override void Tick()
+        {
             switch (currentState)
             {
                 case PlayerState.Idle:
