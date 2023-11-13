@@ -34,6 +34,12 @@ namespace PlayerSystems
                 return;
             }
 
+            if (this == false)
+            {
+                Destroy(ghost.gameObject);
+                return;
+            }
+
             isRented = false;
             ghost.transform.SetParent(ghostParent);
             ghost.gameObject.SetActive(false);
