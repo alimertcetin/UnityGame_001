@@ -91,10 +91,14 @@ namespace PlayerSystems
                     GameState.ChangeState(GameState.ARROW_RELEASED);
                     var instance = MovingPlatformCamera.instance;
                     instance.CancelTween(false);
-                    instance.Show(go.transform);
 
                     var travelTime = trajectoryCollisionData.absoluteCollisionTime - Time.time;
                     instance.XIVTween()
+                        .Wait(0.25f)
+                        .OnComplete(() =>
+                        {
+                            instance.Show(go.transform);
+                        })
                         .Wait(travelTime + 2f)
                         .OnComplete(() =>
                         {

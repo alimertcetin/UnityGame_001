@@ -1,6 +1,7 @@
 using System;
 using TheGame;
 using UnityEngine;
+using XIV.Core.Extensions;
 
 namespace PlayerSystems
 {
@@ -15,8 +16,10 @@ namespace PlayerSystems
     {
         [SerializeField] Transform hand;
         [SerializeField] Bow bow;
+        [SerializeField] Animator animator;
         
         PlayerState currentState;
+        static readonly int StateParameterID = AnimationConstants.ArcherController.Parameters.ArcherController_State_IntID;
         
         protected override void Awake()
         {
@@ -52,7 +55,6 @@ namespace PlayerSystems
 
         void HandleIdle()
         {
-            bow.DisplayAimIndicator();
             if (Input.GetMouseButtonDown(0))
             {
                 SetState(PlayerState.AimBow);
@@ -61,11 +63,19 @@ namespace PlayerSystems
 
         void HandleAim()
         {
+            if (animator.IsPlaying(AnimationConstants.ArcherController.Clips.ArcherController_Aim_IdleHash) == false)
+            {
+                if (Input.GetMouseButton(0) == false)
+                {
+                    SetState(PlayerState.Idle);
+                }
+                return;
+            }
+
             bow.ContinueDrawing();
             bow.DisplayAimIndicator();
             if (Input.GetMouseButtonDown(1))
             {
-                bow.DisplayAimIndicator();
                 SetState(PlayerState.Idle);
             }
             if (Input.GetMouseButton(0) == false)
@@ -83,6 +93,7 @@ namespace PlayerSystems
         void SetState(PlayerState newState)
         {
             currentState = newState;
+            animator.SetInteger(StateParameterID, (int)newState);
         }
     }
 }
